@@ -1,0 +1,317 @@
+<%@page contentType="text/html" pageEncoding="utf-8"%>
+<%@page import="java.util.Date" %>
+<%@page import="java.text.SimpleDateFormat" %>
+<%@ page import="java.sql.DriverManager" %>
+<%@ page import="java.sql.Connection" %>
+<%@ page import="java.sql.Statement" %>
+<%@ page import="java.sql.ResultSet" %>
+<%@ page import="java.sql.SQLException" %>
+<%
+Date now = new Date();
+SimpleDateFormat sf = new SimpleDateFormat("yyyyMMddHHmmss");
+String today = sf.format(now);
+
+//int compare1 = today.compareTo("20210723200000"); //추첨결과일
+int compare1 = today.compareTo("20210723200000"); //추첨결과일
+int compare2 = today.compareTo("20210723180000"); //신청마감일
+if (compare1 >= 0) {
+	// 추첨결과일보다 클경우 결과내역 페이지 호출
+	out.println("<script type=\"text/javascript\">");
+	out.println("document.location = 'randomAllList.jsp';");
+	out.println("</script>");
+}
+else if (compare2 >= 0) {
+	// 신청마감일보다 클경우 마감 페이지 호출
+	out.println("<script type=\"text/javascript\">");
+	out.println("document.location = 'indexClose.jsp';");
+	out.println("</script>");
+}
+
+request.setCharacterEncoding("utf-8");
+Class.forName("com.mysql.jdbc.Driver");
+Connection conn=null;
+Statement stmt=null;
+ResultSet rs = null;
+ResultSet rs2 = null;
+int rowCnt=0;
+int cnt1 = 30;
+int cnt2 = 70;
+try{
+	String jdbcDriver ="jdbc:mysql://localhost:3306/bbjangel01";
+	String dbUser="bbjangel01";
+	String dbPass="bbjangel01~~";
+	String query = "select count(*) as cnt1"
+				 + "  from apply"
+				 + " where gubun = '1'";
+	String query2= "select count(*) as cnt1"
+				 + "  from apply"
+				 + " where gubun = '2'";
+
+	//2.데이터 베이스 커넥션 생성
+	conn=DriverManager.getConnection(jdbcDriver,dbUser,dbPass);
+
+	//3.Statement 생성
+	stmt = conn.createStatement();
+
+	//4. 쿼리실행	
+	rs = stmt.executeQuery(query);
+	if (rs.next()) {
+		cnt1 = rs.getInt(1);
+	}
+	rs2 = stmt.executeQuery(query2);
+	if (rs2.next()) {
+		cnt2 = rs2.getInt(1);
+	}
+}finally {
+	if(rs!=null) try{rs.close();} catch(SQLException ex) {}
+	if(rs2!=null) try{rs2.close();} catch(SQLException ex) {}
+	if(stmt!=null) try{stmt.close();} catch(SQLException ex) {}
+	if(conn!=null) try{conn.close(); }catch(SQLException ex) {}
+}
+%>
+<!doctype html>
+<html lang ="ko" xml:lang="ko">
+<head>
+<meta name="author" content="" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0 ,maximum-scale=1.0, minimum-scale=1.0,user-scalable=no">
+<title>서울~양주 고속도로 민간투자사업 주민설명회 참석 사전신청</title>
+<link rel="shortcut icon" href="./img/favicon.png">
+<link type="text/css" rel="stylesheet" media="all" href="./css/common.css" />
+<link type="text/css" rel="stylesheet" media="all" href="./css/styleDefault.css" />
+<link type="text/css" rel="stylesheet" media="all" href="./css/layout.css" />
+<link type="text/css" rel="stylesheet" media="all" href="./css/board.css" />
+
+<script  type="text/javascript" src="./js/jquery/jquery-1.11.3.min.js"></script>
+<script  type="text/javascript" src="./js/common.js"></script>
+<script  type="text/javascript" src="./js/sub.js"></script>
+<script type="text/javascript" src="./js/jquery/aos.js"></script>
+<link rel="stylesheet" href="./js/css/aos.css">
+<style>
+.date {
+	padding-top:20px;
+	padding-bottom:20px;
+}
+.date_title {
+	display:inline-block; /* default값 inline */
+	width:100px; /* display가 block일때만 지정가능 */
+	text-align: justify;
+}
+</style>
+</head>
+<script>
+$(document).ready(function() {
+	$("#telno1").on("keyup", function() {
+		$(this).val($(this).val().replace(/[^0-9]/g,""));
+	});	
+	$("#telno2").on("keyup", function() {
+		$(this).val($(this).val().replace(/[^0-9]/g,""));
+	});	
+	$("#telno3").on("keyup", function() {
+		$(this).val($(this).val().replace(/[^0-9]/g,""));
+	});	
+	$("#btnApply").on("click", function() {
+		apply();
+	});	
+	function telValidator(args) {
+		args = args.split('-').join('');
+		var regPhone = /(01[016789])([1-9]{1}[0-9]{2,3})([0-9]{4})$/;
+		return regPhone.test(args);
+	}
+	function validChek() {
+		if ($("#name").val().replace(/ /gi, "") == "") {
+			alert("성명을 입력 하세요.");
+			$("#name").focus();
+			return false;
+		}
+		else if ($("#telno1").val().replace(/ /gi, "") == "") {
+			alert("휴대폰번호를 입력 하세요.");
+			$("#telno1").focus();
+			return false;
+		}
+		else if ($("#telno2").val().replace(/ /gi, "") == "") {
+			alert("휴대폰번호를 입력 하세요.");
+			$("#telno2").focus();
+			return false;
+		}
+		else if ($("#telno3").val().replace(/ /gi, "") == "") {
+			alert("휴대폰번호를 입력 하세요.");
+			$("#telno3").focus();
+			return false;
+		}
+		else if ($("#address").val().replace(/ /gi, "") == "") {
+			alert("주소를 입력 하세요.");
+			$("#address").focus();
+			return false;
+		}
+		else if (typeof $("input:radio[name='gubun']:checked").val() == "undefined") {
+			alert("장소를 선택 하세요.");
+			return false;
+		}		
+		return true;
+	}
+	function apply() {	
+		if (validChek()) {
+			document.form1.submit();
+		}		
+	}
+	
+});
+</script>
+
+<body>
+
+<div class="black_bg"></div>
+<div id="skipNavi">
+  <h1 class="blind">서울~양주 고속도로 민간투자사업 스킵네비게이션</h1>
+  <ul>
+    <li><a href="#contents" class="skipLink">본문바로가기</a></li>
+    <li><a href="#topmenu" class="skipLink">주메뉴바로가기</a></li>
+  </ul>
+</div>
+
+<!-- s: #doc //-->
+<div id="doc" class="sub">
+  
+  <!-- s: #container-wrap //-->
+  <div id="container-wrap"> 
+    <!-- s: #top-vis -->
+    <div id="top-vis">
+      <div class="img" data-aos="zoom-out" data-aos-easing="ease" data-aos-duration="3000" style="background-color:#5c5c5c"> <!--<img src="img/img-1.jpg" alt=""/>--> </div>
+      <div class="txt">
+        <h2 data-aos="fade-up" data-aos-easing="ease" data-aos-delay="400">서울~양주 고속도로 민간투자사업</h2>
+        <p data-aos="fade-up" data-aos-easing="ease" data-aos-delay="800">주민설명회 참석 사전신청</p>
+      </div>
+    </div>
+    <!-- e: #top-vis -->
+    
+	<form id="form1" name="form1" action="apply.jsp" method="POST" enctype="application/x-www-form-urlencoded">
+    <div id="contents" class="div-cont"> 
+      <!-- s: page start // -->
+      <div class="con-top">
+        <h2>주민설명회 참석 사전신청</h2>
+        <div class="ssgap"></div>
+        <a href="http://www.molit.go.kr/USR/BORD0201/m_69/DTL.jsp?id=N01_B&cate=&mode=view&idx=245084&key=&search=&search_regdate_s=2020-05-18&search_regdate_e=2021-05-18&order=&desc=asc&srch_prc_stts=&item_num=0&search_dept_id=&search_dept_nm=&srch_usr_nm=N&srch_usr_titl=N&srch_usr_ctnt=N&srch_mng_nm=N&old_dept_nm=&search_gbn=&search_section=&source=&search1=&lcmspage=1" target="_blank" class="bg-btn"><span>설명회 개최 공고문 보러가기</span></a> </div>
+      <div class="counsel-wrap">
+        <div class="entry">
+          <ul>
+            <li>
+              <p class="btxt nec"><span>성명</span></p>
+              <p class="chk-input w400">
+                <input type="text" placeholder="" id="name" name="name"/>
+              </p>
+            </li>
+            <li>
+              <p class="btxt nec"><span>휴대폰번호</span></p>
+              <div class="field phone">
+                <p class="chk-input w120">
+                  <input type="text" placeholder="" id="telno1" name="telno1" maxlength="3"/>
+                </p>
+                <p class="ctxt">-</p>
+                <p class="chk-input w120">
+                  <input type="text" placeholder="" id="telno2" name="telno2" maxlength="4"/>
+                </p>
+                <p class="ctxt">-</p>
+                <p class="chk-input w120">
+                  <input type="text" placeholder="" id="telno3" name="telno3" maxlength="4"/>
+                </p>
+              </div>
+            </li>
+            <li>
+              <p class="btxt nec"><span>주소</span></p>
+              <div class="field addr">
+                <p class="chk-input w100p mg7t">
+                  <input type="text" placeholder="OO시 00구 00동 까지 입력하세요." id="address" name="address"/>
+                </p>
+              </div>
+            </li>		
+          </ul>
+        </div>
+
+
+         <div class="gap"></div>
+        
+        <!-- s: list -->
+        <div class="board-wrap list">
+          <div class="list notice">
+            <p style="padding-bottom:20px; font-size:16px;">* 아래 지역 중 신청 장소를 선택하시기 바랍니다.</p>
+            <table>
+              <colgroup>
+              <col width="100"/>
+              <col width="200"/>
+              <col width="*"/>
+              <col width="200"/>
+              <col width="200"/>
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>구분</th>
+                  <th>시·구</th>
+                  <th>장소</th>
+                  <th>일정</th>
+                  <th>현재신청인원 / 정원</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><p class="chk-radio">
+                      <input type="radio" id="gubun1" name="gubun" value="1"/>
+                      <label for="gubun1"></label>
+                    </p></td>
+                  <td>의정부시, 노원구, 도봉구</td>
+                  <td>의정부시 맑은물사업소 강당(1층)</td>
+                  <td>2021.05.25(화) 10:00</td>
+				  <td><%=cnt1%>명 / 30명(정원)</td>
+                </tr>
+                <tr>
+                  <td><p class="chk-radio">
+                      <input type="radio" id="gubun2" name="gubun" value="2">
+                      <label for="gubun2"></label>
+                    </p></td>
+                  <td>양주시, 동두천시</td>
+                  <td>양주시 문화예술회관 실내체육관</td>
+                  <td>2021.05.25(화) 14:00</td>
+				  <td><%=cnt2%>명 / 70명(정원)</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <!-- e: list -->
+
+        <div class="date">
+			<span class="date_title">* 참석신청기간 </span><span>: 2021.05.18 09:00 ~ 2021.05.23 18:00</span><br>
+			<span class="date_title">* 결과발표일 </span><span>: 2021.05.23 20:00 이후</span><br>
+		</div>
+        
+        <div class="private">
+          <h4>설명회 참석 신청시 안내문</h4>
+          <div class="scroll">
+            <p>- 코로나바이러스감염증-19 상황으로 설명회 참석은 본 사이트로 사전 신청하신 분들에 한하여 참석 가능하며, 사회적 거리두기 시행에 따라<br>
+              &nbsp;&nbsp;사이트 신청 인원 중 선착순으로 확정하여, 확정된 분들께 문자메세지를 발송할 예정입니다.</p>
+            <p>- 설명회 참석은 신청 확정문자를 수신하신 분들에 한하여 입장 가능하며, 신청 확인을 위하여 설명회 당일 신분증을 지참해 주시기 바랍니다.</p>
+          </div>
+        </div>
+        <div class="ssgap"></div>
+        <div class="lower"> <a href="#none" class="bl-btn" id="btnApply"><span>신청하기</span></a> </div>
+      </div>
+      <!-- s: page end // --> 
+      
+    </div>
+	</form>
+  </div>
+  <!-- e: #container-wrap //--> 
+  
+</div>
+<!-- e: #doc //--> 
+
+
+<script>
+	AOS.init({
+		easing: 'ease',
+		duration: 1000
+	});
+</script>
+</body>
+</html>
